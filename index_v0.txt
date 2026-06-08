@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RentFlow - Landlord Dashboard Prototype</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body class="bg-gray-100 font-sans min-h-screen flex flex-col justify-between">
+
+    <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div
+                    class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
+                    R</div>
+                <h1 class="text-xl font-black text-gray-800 tracking-tight">Rent<span class="text-blue-600">Flow</span>
+                </h1>
+            </div>
+            <button id="btn-logout"
+                class="bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-800 font-semibold px-4 py-2 rounded-lg text-sm transition hidden cursor-pointer">
+                Sign Out
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 flex items-center justify-center">
+
+        <div id="auth-container"
+            class="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 max-w-md w-full my-auto">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Welcome to RentFlow</h2>
+                <p class="text-sm text-gray-500 mt-1">Manage tenants, track leases, and log payments</p>
+            </div>
+
+            <form id="auth-form" class="space-y-4" onsubmit="event.preventDefault();">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Email
+                        Address</label>
+                    <input type="email" id="auth-email"
+                        class="w-full border border-gray-200 rounded-lg p-3 text-sm focus:outline-none focus:border-blue-500 transition"
+                        placeholder="name@company.com" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Password</label>
+                    <input type="password" id="auth-password"
+                        class="w-full border border-gray-200 rounded-lg p-3 text-sm focus:outline-none focus:border-blue-500 transition"
+                        placeholder="••••••••" required>
+                </div>
+
+                <div id="auth-actions-wrapper" class="flex items-center justify-between gap-4 pt-2">
+                    <button id="btn-login" type="button"
+                        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold p-3 rounded-lg text-sm tracking-wide shadow-md shadow-blue-100 active:scale-95 transition cursor-pointer text-center">
+                        Log In
+                    </button>
+                    <button id="btn-signup" type="button"
+                        class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold p-3 rounded-lg text-sm tracking-wide active:scale-95 transition cursor-pointer text-center">
+                        Sign Up
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div id="dashboard-container" class="w-full space-y-6 hidden">
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                <div class="space-y-6 lg:col-span-1">
+
+                    <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                        <h3
+                            class="font-bold text-gray-800 border-b border-gray-100 pb-2 mb-4 flex items-center text-sm uppercase tracking-wider text-gray-400">
+                            Add New Tenant Profile
+                        </h3>
+                        <form id="unit-form" class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Property Name</label>
+                                <input type="text" id="prop-name" placeholder="e.g., Diamond Heights Villa"
+                                    class="w-full border border-gray-200 rounded-lg p-2.5 text-xs focus:outline-none focus:border-blue-500"
+                                    required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Unit Reference
+                                    Code</label>
+                                <input type="text" id="unit-no" placeholder="e.g., Apartment 4B"
+                                    class="w-full border border-gray-200 rounded-lg p-2.5 text-xs focus:outline-none focus:border-blue-500"
+                                    required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Tenant Full Name</label>
+                                <input type="text" id="tenant-name" placeholder="John Doe"
+                                    class="w-full border border-gray-200 rounded-lg p-2.5 text-xs focus:outline-none focus:border-blue-500"
+                                    required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Tenant Phone
+                                    Contact</label>
+                                <input type="tel" id="tenant-phone" placeholder="e.g., +234..."
+                                    class="w-full border border-gray-200 rounded-lg p-2.5 text-xs focus:outline-none focus:border-blue-500"
+                                    required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Annual Contract Base Rent
+                                    (₦)</label>
+                                <input type="number" step="0.01" id="annual-rent" placeholder="3500000"
+                                    class="w-full border border-gray-200 rounded-lg p-2.5 text-xs focus:outline-none focus:border-blue-500"
+                                    required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Lease Effective Start
+                                    Date</label>
+                                <input type="date" id="lease-start"
+                                    class="w-full border border-gray-200 rounded-lg p-2.5 text-xs focus:outline-none focus:border-blue-500"
+                                    required>
+                            </div>
+                            <button type="submit"
+                                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-xs tracking-wide transition mt-2 cursor-pointer shadow-sm">
+                                Provision & Commit Lease
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                        <h3
+                            class="font-bold text-gray-800 border-b border-gray-100 pb-2 mb-4 flex items-center text-sm uppercase tracking-wider text-gray-400">
+                            Log Inbound Payment Transaction
+                        </h3>
+                        <form id="payment-form" class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Target Tenant
+                                    Allocation</label>
+                                <select id="pay-unit-id"
+                                    class="w-full border border-gray-200 rounded-lg p-2.5 text-xs bg-white focus:outline-none focus:border-blue-500"
+                                    required>
+                                    <option value="">-- Choose a Registered Tenant --</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Transaction
+                                    Category</label>
+                                <select id="pay-type"
+                                    class="w-full border border-gray-200 rounded-lg p-2.5 text-xs bg-white focus:outline-none focus:border-blue-500"
+                                    required>
+                                    <option value="Rent Upfront">Rent Upfront Payment</option>
+                                    <option value="Security Deposit">Refundable Security Deposit</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Amount Transferred
+                                    (₦)</label>
+                                <input type="number" step="0.01" id="pay-amount" placeholder="1500000"
+                                    class="w-full border border-gray-200 rounded-lg p-2.5 text-xs focus:outline-none focus:border-blue-500"
+                                    required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Bank Reference
+                                    Code</label>
+                                <input type="text" id="pay-ref" placeholder="e.g., TXN-982341-REF"
+                                    class="w-full border border-gray-200 rounded-lg p-2.5 text-xs focus:outline-none focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Value Settlement
+                                    Date</label>
+                                <input type="date" id="pay-date"
+                                    class="w-full border border-gray-200 rounded-lg p-2.5 text-xs focus:outline-none focus:border-blue-500"
+                                    required>
+                            </div>
+                            <button type="submit"
+                                class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-lg text-xs tracking-wide transition mt-2 cursor-pointer shadow-sm">
+                                Execute Settlement Ledger Entry
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+
+                <div class="lg:col-span-2 space-y-6">
+
+                    <div>
+                        <h3 class="text-base font-bold text-gray-800 mb-3 flex items-center">
+                            Portfolio Portfolio Units & Rental Metrics
+                        </h3>
+                        <div id="units-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div class="p-4 border-b border-gray-100 bg-gray-50/70">
+                            <h3 class="font-bold text-gray-800 text-sm tracking-wide">Cloud Transaction Audit Trail</h3>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm whitespace-nowrap">
+                                <thead
+                                    class="bg-gray-100/80 text-gray-500 text-xs font-bold uppercase tracking-wider border-b border-gray-200">
+                                    <tr>
+                                        <th class="p-3">Property (Unit)</th>
+                                        <th class="p-3">Tenant Profile</th>
+                                        <th class="p-3">Classification</th>
+                                        <th class="p-3">Amount Credited</th>
+                                        <th class="p-3">Bank Reference</th>
+                                        <th class="p-3">Settlement Date</th>
+                                        <th class="p-3 text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ledger-rows" class="divide-y divide-gray-100 text-xs text-gray-700">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 py-3 text-center text-xs text-gray-400 font-medium">
+        RentFlow Cloud Infrastructure System Engine • Verified Environment
+    </footer>
+
+    <script>
+        // CONFIGURATION: Cloud Endpoint Synchronization Mapping
+        const SUPABASE_URL = "https://hylzqoaymdwmureerflp.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh5bHpxb2F5bWR3bXVyZWVyZmxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMDA2OTEsImV4cCI6MjA5NDU3NjY5MX0.pnqrRudzzxXBu7D98MAHte4McPwVzgmhIV18NnIQYkY";
+
+        // Initialization using isolated variable instance to lock out console scoping errors
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // State Machine Management Objects
+        let currentUser = null;
+        let localUnits = [];
+
+        // UI Layer Caching Engine
+        const authContainer = document.getElementById('auth-container');
+        const dashboardContainer = document.getElementById('dashboard-container');
+        const authForm = document.getElementById('auth-form');
+        const unitForm = document.getElementById('unit-form');
+        const paymentForm = document.getElementById('payment-form');
+        const logoutBtn = document.getElementById('btn-logout');
+        const actionsWrapper = document.getElementById('auth-actions-wrapper');
+
+        // Check active local browser token maps on page loading cycle
+        window.addEventListener('DOMContentLoaded', async () => {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                handleUserLogin(session.user);
+            }
+        });
+
+        // WORKFLOW ENGINE: Morphing Secure Front-End Form Interceptions
+        document.getElementById('btn-signup').addEventListener('click', async () => {
+            const emailField = document.getElementById('auth-email');
+            const passwordField = document.getElementById('auth-password');
+            const signUpBtn = document.getElementById('btn-signup');
+            const logInBtn = document.getElementById('btn-login');
+
+            const email = emailField.value;
+            const password = passwordField.value;
+
+            if (!email || !password) return alert("Please specify valid authentication parameters.");
+
+            // 1. Commit registration array to Cloud Engine
+            const { data, error } = await supabaseClient.auth.signUp({ email, password });
+            if (error) return alert("Signup Error Event: " + error.message);
+
+            // 2. Wipe Password data mapping to enforce verification logging
+            passwordField.value = '';
+
+            // 3. Lock out Email inputs and grey background to guide the eye
+            emailField.disabled = true;
+            emailField.classList.add('bg-gray-100', 'text-gray-400', 'pointer-events-none');
+
+            // 4. Transform Layout: Hide Sign Up, center the standard-sized Log In button cleanly
+            signUpBtn.style.display = 'none';
+            logInBtn.classList.remove('flex-1');
+            logInBtn.classList.add('w-1/2', 'mx-auto'); // Centers a clean, medium-sized button
+            actionsWrapper.classList.remove('justify-between');
+            actionsWrapper.classList.add('justify-center');
+
+            // 5. Build and slide in a custom structural alert component
+            const notice = document.createElement('div');
+            notice.id = "signup-success-notice";
+            notice.className = "text-center text-green-700 font-semibold my-3 p-3 bg-green-50 border border-green-200 rounded-xl text-xs tracking-wide";
+            notice.innerText = "Account provisioned successfully! Please re-type your matching password to settle authentication confirmation.";
+
+            authForm.insertBefore(notice, authForm.firstChild);
+        });
+
+        document.getElementById('btn-login').addEventListener('click', async () => {
+            const emailField = document.getElementById('auth-email');
+            const passwordField = document.getElementById('auth-password');
+            const signUpBtn = document.getElementById('btn-signup');
+            const logInBtn = document.getElementById('btn-login');
+
+            const email = emailField.value;
+            const password = passwordField.value;
+            if (!email || !password) return alert("Please populate core verification data parameters.");
+
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+            if (error) {
+                alert("Login System Core Rejection: " + error.message);
+
+                // ESCAPE OVERWRITE METHOD: Instantly drop layouts back to original splits on rejection
+                emailField.disabled = false;
+                emailField.classList.remove('bg-gray-100', 'text-gray-400', 'pointer-events-none');
+                passwordField.value = '';
+
+                signUpBtn.style.display = 'inline-block';
+                logInBtn.classList.remove('w-1/2', 'mx-auto');
+                logInBtn.classList.add('flex-1');
+                actionsWrapper.classList.remove('justify-center');
+                actionsWrapper.classList.add('justify-between');
+
+                const existingNotice = document.getElementById('signup-success-notice');
+                if (existingNotice) existingNotice.remove();
+
+                return;
+            }
+
+            // On authorized response clearing old templates structures and pass to view engine
+            const existingNotice = document.getElementById('signup-success-notice');
+            if (existingNotice) existingNotice.remove();
+            handleUserLogin(data.user);
+        });
+
+        logoutBtn.addEventListener('click', async () => {
+            await supabaseClient.auth.signOut();
+            currentUser = null;
+
+            // Full Reset Form State Interface Cleanliness Loops
+            const emailField = document.getElementById('auth-email');
+            const signUpBtn = document.getElementById('btn-signup');
+            const logInBtn = document.getElementById('btn-login');
+
+            emailField.disabled = false;
+            emailField.classList.remove('bg-gray-100', 'text-gray-400', 'pointer-events-none');
+            emailField.value = '';
+            document.getElementById('auth-password').value = '';
+
+            signUpBtn.style.display = 'inline-block';
+            logInBtn.classList.remove('w-1/2', 'mx-auto');
+            logInBtn.classList.add('flex-1');
+            actionsWrapper.classList.remove('justify-center');
+            actionsWrapper.classList.add('justify-between');
+
+            const existingNotice = document.getElementById('signup-success-notice');
+            if (existingNotice) existingNotice.remove();
+
+            dashboardContainer.classList.add('hidden');
+            logoutBtn.classList.add('hidden');
+            authContainer.classList.remove('hidden');
+        });
+
+        function handleUserLogin(user) {
+            currentUser = user;
+            authContainer.classList.add('hidden');
+            dashboardContainer.classList.remove('hidden');
+            logoutBtn.classList.remove('hidden');
+            refreshDashboardData();
+        }
+
+        // DATABASE MODULE: Advanced Processing, Rendering and Mathematical Verification Loops
+        async function refreshDashboardData() {
+            if (!currentUser) return;
+
+            // Sync data elements mapped to active identity strings
+            const { data: units, error: unitErr } = await supabaseClient
+                .from('properties_units')
+                .select('*')
+                .eq('landlord_id', currentUser.id);
+
+            if (unitErr) console.error(unitErr);
+            localUnits = units || [];
+
+            // Reset selection objects inside execution fields
+            const selectDropdown = document.getElementById('pay-unit-id');
+            selectDropdown.innerHTML = '<option value="">-- Choose a Registered Tenant --</option>';
+            localUnits.forEach(u => {
+                selectDropdown.innerHTML += `<option value="${u.id}">${u.property_name} - ${u.unit_number} (${u.tenant_name})</option>`;
+            });
+
+            // Target card array element block clears
+            const unitsListContainer = document.getElementById('units-list');
+            unitsListContainer.innerHTML = '';
+
+            if (localUnits.length === 0) {
+                unitsListContainer.innerHTML = '<p class="text-sm text-gray-400 italic col-span-2 text-center py-4">No portfolio allocation records managed on this cloud account string.</p>';
+            }
+
+            localUnits.forEach(u => {
+                // Mathematical Parse Delta calculations for dynamic notification alerts
+                const leaseStartDate = new Date(u.lease_start);
+                const leaseExpiryDate = new Date(leaseStartDate.setFullYear(leaseStartDate.getFullYear() + 1));
+                const today = new Date();
+                const timeDiff = leaseExpiryDate - today;
+                const daysRemaining = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+
+                let badgeColor = "bg-green-100 text-green-800";
+                let alertText = `${daysRemaining} days left`;
+
+                if (daysRemaining <= 0) {
+                    badgeColor = "bg-red-100 text-red-800 animate-pulse font-bold";
+                    alertText = "Lease Expired / Owed";
+                } else if (daysRemaining < 60) {
+                    badgeColor = "bg-amber-100 text-amber-800 font-semibold";
+                    alertText = `${daysRemaining} days left (Review Contract)`;
+                }
+
+                unitsListContainer.innerHTML += `
+                    <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition">
+                        <div>
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-bold text-gray-800 text-base">${u.unit_number}</h4>
+                                <span class="text-[10px] px-2 py-0.5 rounded-full ${badgeColor}">${alertText}</span>
+                            </div>
+                            <p class="text-xs text-gray-400 mb-2 font-medium tracking-wide">${u.property_name}</p>
+                            <div class="space-y-0.5 border-l-2 border-gray-100 pl-2 py-0.5">
+                                <p class="text-xs font-bold text-gray-700">Occupant: ${u.tenant_name}</p>
+                                <p class="text-[11px] text-gray-500">Contact: ${u.tenant_phone}</p>
+                            </div>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center">
+                            <span class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Annual Value Baseline</span>
+                            <span class="text-sm font-black text-gray-800">₦${Number(u.annual_rent).toLocaleString()}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Log ledger sync engine queries
+            if (localUnits.length > 0) {
+                const unitIds = localUnits.map(u => u.id);
+                const { data: transactions, error: txErr } = await supabaseClient
+                    .from('financial_ledger')
+                    .select('*, properties_units(property_name, unit_number, tenant_name)')
+                    .in('unit_id', unitIds)
+                    .order('payment_date', { ascending: false });
+
+                if (txErr) console.error(txErr);
+
+                const ledgerRowsContainer = document.getElementById('ledger-rows');
+                ledgerRowsContainer.innerHTML = '';
+
+                if (transactions && transactions.length > 0) {
+                    transactions.forEach(t => {
+                        const typeStyles = t.payment_type === 'Rent Upfront' ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-purple-50 text-purple-700 border-purple-100';
+                        ledgerRowsContainer.innerHTML += `
+                            <tr class="hover:bg-gray-50/80 transition">
+                                <td class="p-3 font-semibold text-gray-800">${t.properties_units.property_name} (${t.properties_units.unit_number})</td>
+                                <td class="p-3 font-medium text-gray-600">${t.properties_units.tenant_name}</td>
+                                <td class="p-3"><span class="text-[10px] font-bold px-2 py-1 rounded border ${typeStyles}">${t.payment_type}</span></td>
+                                <td class="p-3 font-bold text-gray-900 text-sm">₦${Number(t.amount_paid).toLocaleString()}</td>
+                                <td class="p-3 text-gray-400 font-mono text-[11px]">${t.bank_reference || '—'}</td>
+                                <td class="p-3 text-gray-500 font-medium">${t.payment_date}</td>
+                                <td class="p-3 text-center">
+                                    <button onclick="deleteTransaction('${t.id}')" class="text-red-500 hover:text-red-700 font-bold tracking-wide hover:underline cursor-pointer">Delete</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    ledgerRowsContainer.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-400 italic font-medium">No recorded transactional values tied to system tracking assets.</td></tr>`;
+                }
+            } else {
+                document.getElementById('ledger-rows').innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-400 italic font-medium">No recorded transactional values tied to system tracking assets.</td></tr>`;
+            }
+        }
+
+        // TRANSACTION CONTROL MATRIX
+        unitForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentUser) return;
+
+            const payload = {
+                landlord_id: currentUser.id,
+                property_name: document.getElementById('prop-name').value,
+                unit_number: document.getElementById('unit-no').value,
+                tenant_name: document.getElementById('tenant-name').value,
+                tenant_phone: document.getElementById('tenant-phone').value,
+                annual_rent: parseFloat(document.getElementById('annual-rent').value),
+                lease_start: document.getElementById('lease-start').value
+            };
+
+            const { error } = await supabaseClient.from('properties_units').insert([payload]);
+            if (error) return alert("System Processing Failure on Asset Write: " + error.message);
+
+            unitForm.reset();
+            refreshDashboardData();
+        });
+
+        paymentForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const unitId = document.getElementById('pay-unit-id').value;
+            if (!unitId) return alert("Please select an active tracking asset channel target allocation mapping.");
+
+            const payload = {
+                unit_id: unitId,
+                payment_type: document.getElementById('pay-type').value,
+                amount_paid: parseFloat(document.getElementById('pay-amount').value),
+                bank_reference: document.getElementById('pay-ref').value,
+                payment_date: document.getElementById('pay-date').value
+            };
+
+            const { error } = await supabaseClient.from('financial_ledger').insert([payload]);
+            if (error) return alert("System Processing Failure on Transaction Settlement Append: " + error.message);
+
+            paymentForm.reset();
+            refreshDashboardData();
+        });
+
+        // DESTRUCTIVE ACTION INTERACTION CALL
+        async function deleteTransaction(txId) {
+            if (!confirm("Are you completely sure you want to drop this ledger line confirmation reference from the encrypted cloud database?")) return;
+
+            const { error } = await supabaseClient.from('financial_ledger').delete().eq('id', txId);
+            if (error) return alert("Database Level Delete Protection Refusal: " + error.message);
+            refreshDashboardData();
+        }
+    </script>
+</body>
+
+</html>

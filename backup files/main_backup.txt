@@ -1,0 +1,316 @@
+// RENTFLOW CORE ENGINE ORCHESTRATOR
+const SUPABASE_URL = "https://hylzqoaymdwmureerflp.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_rjSJEJ3vRFdplomuyOrpuA_ouSv-86K";
+
+const supabaseClient = bootstrapSupabaseInstance();
+let activeUserSession = null;
+let appLocalCache = [];
+let targetActiveLedgerCache = null;
+
+function bootstrapSupabaseInstance() {
+    try {
+        return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } catch (err) {
+        console.error("System pipeline failed initialization components:", err);
+        alert("System Architecture Error: Verification Keys Empty.");
+    }
+}
+
+// 1. MASTER AUTHENTICATION LISTENER ENGINE
+supabaseClient.auth.onAuthStateChange((event, session) => {
+    const loadingScreen = document.getElementById("appLoadingScreen");
+    const authScreen = document.getElementById("authScreen");
+    const appShell = document.getElementById("appShell");
+
+    if (session) {
+        activeUserSession = session.user;
+        document.getElementById("userProfileEmail").textContent = activeUserSession.email;
+
+        // Hide access gates, run full data pipeline synchronization
+        authScreen.classList.add("hidden");
+        appShell.classList.remove("hidden");
+        synchronizeSystemDatabaseData().then(() => {
+            if (loadingScreen) loadingScreen.classList.add("opacity-0");
+            setTimeout(() => loadingScreen?.classList.add("hidden"), 300);
+        });
+    } else {
+        activeUserSession = null;
+        appShell.classList.add("hidden");
+        authScreen.classList.remove("hidden");
+        if (loadingScreen) loadingScreen.classList.add("hidden");
+    }
+});
+
+// 2. TAB CONTROLLER LAYOUT SWITCH ROUTINES
+document.querySelectorAll(".nav-link").forEach(navButton => {
+    navButton.addEventListener("click", (e) => {
+        // Toggle Sidebar Nav States Visually
+        document.querySelectorAll(".nav-link").forEach(btn => {
+            btn.classList.remove("bg-emerald-600/10", "text-emerald-400", "border", "border-emerald-500/20");
+            btn.classList.add("text-slate-400");
+        });
+        navButton.classList.add("bg-emerald-600/10", "text-emerald-400", "border", "border-emerald-500/20");
+
+        // Toggle Visibility Pane Blocks
+        const targetViewId = navButton.getAttribute("data-target");
+        document.querySelectorAll(".view-pane").forEach(pane => pane.classList.add("hidden"));
+        document.getElementById(targetViewId).classList.remove("hidden");
+    });
+});
+
+// 3. SECURE AUTH FORM FORMULATION SUBMISSION HOOK
+document.getElementById("authForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("authEmail").value;
+    const password = document.getElementById("authPassword").value;
+    const submitBtn = document.getElementById("authSubmitBtn");
+    const isSignUpMode = submitBtn.textContent.includes("Register");
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Processing Transaction...";
+
+    try {
+        if (isSignUpMode) {
+            const { error } = await supabaseClient.auth.signUp({ email, password });
+            if (error) throw error;
+            alert("Registration successful! Check verification email links if active.");
+        } else {
+            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) throw error;
+        }
+    } catch (err) {
+        alert(`Authentication Interrupted: ${err.message}`);
+        submitBtn.disabled = false;
+        submitBtn.textContent = isSignUpMode ? "Register New Account" : "Access Dashboard";
+    }
+});
+
+// Toggle Login / Signup Modes UI text triggers
+document.getElementById("toggleAuthMode").addEventListener("click", () => {
+    const submitBtn = document.getElementById("authSubmitBtn");
+    const modeLink = document.getElementById("toggleAuthMode");
+    const subTitle = document.getElementById("authSubtitle");
+
+    if (submitBtn.textContent.includes("Access")) {
+        submitBtn.textContent = "Register New Account";
+        modeLink.textContent = "Already have an account? Sign in instead";
+        subTitle.textContent = "Create your secure asset management portal";
+    } else {
+        submitBtn.textContent = "Access Dashboard";
+        modeLink.textContent = "Don't have an account? Sign up here";
+        subTitle.textContent = "Rent & Lease Tracking Dashboard";
+    }
+});
+
+// Sign out trigger hooks
+const executeSignOutSequence = async () => {
+    if (confirm("Confirm security termination session?")) {
+        await supabaseClient.auth.signOut();
+        window.location.reload();
+    }
+};
+document.getElementById("signOutBtn").addEventListener("click", executeSignOutSequence);
+document.getElementById("settingsSignOutBtn").addEventListener("click", executeSignOutSequence);
+
+// 4. DATA SYNCHRONIZER METRIC COMPILATION ROUTINE
+async function synchronizeSystemDatabaseData() {
+    if (!activeUserSession) return;
+
+    try {
+        // Enforce Row-Level user filtering protection architecture checks
+        const { data: tenancies, error: tenantErr } = await supabaseClient
+            .from("tenancies")
+            .select("*")
+            .eq("user_id", activeUserSession.id);
+
+        if (tenantErr) throw tenantErr;
+
+        const { data: invoices, error: invoiceErr } = await supabaseClient
+            .from("invoices")
+            .select("*")
+            .eq("user_id", activeUserSession.id);
+
+        if (invoiceErr) throw invoiceErr;
+
+        // Map data layers dynamically inside cache arrays
+        appLocalCache = tenancies.map(t => {
+            const linkedInvoice = invoices.find(inv => inv.asset_id === t.id) || null;
+            return { ...t, finance: linkedInvoice };
+        });
+
+        // Trigger UI layout modules updates
+        calculateAndDisplayGlobalMetrics(appLocalCache);
+        renderTenantGrid(appLocalCache);
+        renderPaymentsLedgerView(appLocalCache);
+        renderLeasesTrackerView(appLocalCache);
+
+    } catch (err) {
+        console.error("Database compilation sync sequence failed:", err);
+    }
+}
+
+// 5. SECURE RECORD INSERTION PIPELINE (ONBOARDING WIZARD)
+document.getElementById("wizardForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!activeUserSession) return;
+
+    const newTenancyPayload = {
+        user_id: activeUserSession.id,
+        tenant_name: document.getElementById("wTenantName").value,
+        tenant_phone: document.getElementById("wTenantPhone").value,
+        property_name: document.getElementById("wPropertyName").value,
+        unit_number: document.getElementById("wUnitNumber").value,
+        annual_rent: parseFloat(document.getElementById("wAnnualRent").value),
+        expiry_date: document.getElementById("wExpiryDate").value
+    };
+
+    try {
+        // Step A: Insert Primary Tenant Object
+        const { data: tenantRecord, error: tErr } = await supabaseClient
+            .from("tenancies")
+            .insert([newTenancyPayload])
+            .select()
+            .single();
+
+        if (tErr) throw tErr;
+
+        // Step B: Spawn Matching Financial Ledger Track Object Line Row
+        const invoicePayload = {
+            user_id: activeUserSession.id,
+            asset_id: tenantRecord.id,
+            total_rent: tenantRecord.annual_rent,
+            amount_paid: 0,
+            balance_due: tenantRecord.annual_rent,
+            status: "Unpaid"
+        };
+
+        const { error: invErr } = await supabaseClient.from("invoices").insert([invoicePayload]);
+        if (invErr) throw invErr;
+
+        document.getElementById("onboardingWizardModal").classList.add("hidden");
+        document.getElementById("wizardForm").reset();
+        await synchronizeSystemDatabaseData();
+
+    } catch (err) {
+        alert(`Failed writing transactional record pipeline: ${err.message}`);
+    }
+});
+
+// 6. MANAGEMENT INTERFACE ACTIONS MODAL HANDLERS
+async function openManageModal(assetId) {
+    const record = appLocalCache.find(r => r.id === assetId);
+    if (!record) return;
+
+    targetActiveLedgerCache = record.finance;
+
+    document.getElementById("editAssetId").value = record.id;
+    document.getElementById("editTenantName").value = record.tenant_name;
+    document.getElementById("editTenantPhone").value = record.tenant_phone || "";
+
+    document.getElementById("modalTotalRent").textContent = `₦${record.annual_rent.toLocaleString()}`;
+    document.getElementById("modalAmountPaid").textContent = `₦${(targetActiveLedgerCache?.amount_paid || 0).toLocaleString()}`;
+    document.getElementById("modalBalanceDue").textContent = `₦${(targetActiveLedgerCache?.balance_due ?? record.annual_rent).toLocaleString()}`;
+    document.getElementById("logPaymentAmount").value = "";
+
+    document.getElementById("manageAssetModal").classList.remove("hidden");
+}
+
+document.getElementById("manageAssetForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!activeUserSession) return;
+
+    const assetId = document.getElementById("editAssetId").value;
+    const freshPayment = parseFloat(document.getElementById("logPaymentAmount").value) || 0;
+    const updatedName = document.getElementById("editTenantName").value;
+    const updatedPhone = document.getElementById("editTenantPhone").value;
+
+    try {
+        // Patch Core Profiling Data Parameters First
+        const { error: tErr } = await supabaseClient
+            .from("tenancies")
+            .update({ tenant_name: updatedName, tenant_phone: updatedPhone })
+            .eq("id", assetId);
+
+        if (tErr) throw tErr;
+
+        // Process Financial Sub-Ledger Calculations Adjustments
+        if (freshPayment > 0) {
+            let totalRent = parseFloat(document.getElementById("modalTotalRent").textContent.replace(/[₦,]/g, ''));
+
+            if (!targetActiveLedgerCache) {
+                // Legacy Fallback Fall-through generation check script block
+                const spawnInvoice = {
+                    user_id: activeUserSession.id,
+                    asset_id: assetId,
+                    total_rent: totalRent,
+                    amount_paid: freshPayment,
+                    balance_due: totalRent - freshPayment,
+                    status: (totalRent - freshPayment <= 0) ? "Paid" : "Partially Paid"
+                };
+                const { error: spawnErr } = await supabaseClient.from("invoices").insert([spawnInvoice]);
+                if (spawnErr) throw spawnErr;
+            } else {
+                let currentPaid = targetActiveLedgerCache.amount_paid + freshPayment;
+                let finalBalance = targetActiveLedgerCache.total_rent - currentPaid;
+                let statusString = finalBalance <= 0 ? "Paid" : "Partially Paid";
+
+                const { error: invErr } = await supabaseClient
+                    .from("invoices")
+                    .update({ amount_paid: currentPaid, balance_due: finalBalance, status: statusString })
+                    .eq("asset_id", assetId);
+
+                if (invErr) throw invErr;
+            }
+        }
+
+        document.getElementById("manageAssetModal").classList.add("hidden");
+        await synchronizeSystemDatabaseData();
+
+    } catch (err) {
+        alert(`Error modifying record engine files: ${err.message}`);
+    }
+});
+
+// 7. CONTEXT-AWARE AI WHATSAPP AUTOMATION HOOK DELEGATION ENGINE
+document.getElementById("whatsappReminderBtn").addEventListener("click", () => {
+    const tenantName = document.getElementById("editTenantName").value;
+    let rawPhone = document.getElementById("editTenantPhone").value;
+    const totalRentStr = document.getElementById("modalTotalRent").textContent;
+    const balanceStr = document.getElementById("modalBalanceDue").textContent;
+    const balanceNum = parseFloat(balanceStr.replace(/[₦,]/g, '')) || 0;
+
+    if (!rawPhone) {
+        alert("Action Cancelled: No registered communication path details string found.");
+        return;
+    }
+
+    // Clean Phone String Data Pipeline (Country Code 234 Normalizer Engine)
+    let cleanPhone = rawPhone.replace(/\D/g, '');
+    if (cleanPhone.startsWith('0')) {
+        cleanPhone = '234' + cleanPhone.substring(1);
+    } else if (!cleanPhone.startsWith('234') && cleanPhone.length === 10) {
+        cleanPhone = '234' + cleanPhone;
+    }
+
+    // Contextual Copywriter Adaptation String Logic Block
+    let baselineMessageText = "";
+    if (balanceNum > 0) {
+        baselineMessageText = `Hello ${tenantName}, this is a friendly update from management regarding your lease ledger tracking metrics. Our sub-ledger currently reflects an outstanding remaining balance due of ${balanceStr} against your total annual rent of ${totalRentStr}. Kindly check with management workflows to clear tracking states. Thank you!`;
+    } else {
+        baselineMessageText = `Hello ${tenantName}, this is a quick acknowledgement confirmation line from management tracking. Your annual rent registry of ${totalRentStr} is fully paid and settled in our ledger database fields. Thank you for your promptness!`;
+    }
+
+    const compiledDeepLinkUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(baselineMessageText)}`;
+    window.open(compiledDeepLinkUrl, '_blank');
+});
+
+// Modal Close Button UI Event Wire-ups
+document.querySelectorAll(".closeModalBtn").forEach(btn => {
+    btn.addEventListener("click", () => {
+        document.getElementById("onboardingWizardModal").classList.add("hidden");
+        document.getElementById("manageAssetModal").classList.add("hidden");
+    });
+});
+document.getElementById("openWizardBtn").addEventListener("click", () => {
+    document.getElementById("onboardingWizardModal").classList.remove("hidden");
+});

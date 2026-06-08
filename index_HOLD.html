@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RentFlow | Premium PropTech MVP</title>
+    <!-- Tailwind CSS Play CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body class="bg-slate-950 text-slate-100 antialiased min-h-screen">
+
+    <!-- Global Application Wrapper -->
+    <main class="max-w-7xl mx-auto p-4 md:p-8">
+
+        <!-- Premium Header Layer -->
+        <header
+            class="mb-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-6">
+            <div>
+                <h1 class="text-3xl font-extrabold tracking-tight text-white">RentFlow</h1>
+                <p class="text-sm text-slate-400 mt-1">Rent & Lease Tracking Dashboard</p>
+            </div>
+            <button id="openWizardBtn"
+                class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-semibold shadow-sm transition-all transform active:scale-95 cursor-pointer">
+                + Add New Tenant
+            </button>
+        </header>
+
+        <!-- Metric Analytics Deck -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10" id="metricsDeck">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Asset Count</span>
+                <div class="text-2xl font-black text-white mt-1" id="metricTotalAssets">0</div>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm">
+                <span class="text-xs font-bold uppercase tracking-wider text-amber-400">Renewals Pending (60
+                    Days)</span>
+                <div class="text-2xl font-black text-amber-400 mt-1" id="metricPendingRenewals">0</div>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm">
+                <span class="text-xs font-bold uppercase tracking-wider text-rose-400">Expired / Arrears State</span>
+                <div class="text-2xl font-black text-rose-400 mt-1" id="metricExpiredLeases">0</div>
+            </div>
+        </section>
+
+        <!-- Active Operations Feed -->
+        <section class="bg-slate-900 rounded-2xl border border-slate-800 shadow-sm p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-lg font-bold text-white tracking-tight">Active Tenant Records</h2>
+                <span class="text-xs bg-slate-800 text-slate-300 font-semibold px-2.5 py-1 rounded-md">Live Sync</span>
+            </div>
+            <div id="tenantGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Dynamically populated via js/ui.js -->
+            </div>
+        </section>
+    </main>
+
+    <!-- 3-Step Onboarding Wizard Modal Backdrop -->
+    <div id="onboardingWizard"
+        class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 z-50 transition-all">
+        <!-- Modal Card Container -->
+        <div
+            class="bg-slate-900 w-full max-w-lg rounded-2xl shadow-xl border border-slate-800 overflow-hidden transform transition-all scale-100 max-h-[90vh] flex flex-col">
+
+            <!-- Wizard Header Section -->
+            <div class="p-6 border-b border-slate-800 bg-slate-950 flex justify-between items-center">
+                <div>
+                    <h3 class="text-lg font-bold text-white">Onboard Asset Pipeline</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Register contracts to the immutable relational ledger.</p>
+                </div>
+                <button id="closeWizardBtn"
+                    class="text-slate-400 hover:text-slate-200 font-bold text-xl p-1 cursor-pointer">&times;</button>
+            </div>
+
+            <!-- Step Sequence Progress Indicator Bar -->
+            <div
+                class="px-6 pt-4 flex justify-between items-center text-xs font-bold tracking-wider uppercase text-slate-500 border-b border-slate-800 pb-3 bg-slate-950">
+                <span id="stepBadge1" class="text-indigo-400 transition">1. Property</span>
+                <span class="text-slate-700">/</span>
+                <span id="stepBadge2" class="transition">2. Tenant & Rent</span>
+                <span class="text-slate-700">/</span>
+                <span id="stepBadge3" class="transition">3. Timeline Baseline</span>
+            </div>
+
+            <!-- Central Form Content Container -->
+            <form id="wizardForm" class="p-6 overflow-y-auto flex-1 space-y-4 bg-slate-900">
+
+                <!-- STEP 1 VIEW PANEL: Property Metrics -->
+                <div id="wizardStep1" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1">Property Name
+                            / Complex Structure</label>
+                        <input type="text" id="inputPropertyName" placeholder="e.g., Alpha Towers, Lekki Phase 1"
+                            class="w-full border border-slate-800 bg-slate-950 text-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-hidden focus:border-indigo-500 transition shadow-sm"
+                            required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1">Unit / Suite
+                            / Apartment Designation</label>
+                        <input type="text" id="inputUnitNumber" placeholder="e.g., Suite 402, Block B"
+                            class="w-full border border-slate-800 bg-slate-950 text-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-hidden focus:border-indigo-500 transition shadow-sm"
+                            required>
+                    </div>
+                </div>
+
+                <!-- STEP 2 VIEW PANEL: Tenant Identity & Value Parameters -->
+                <div id="wizardStep2" class="space-y-4 hidden">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1">Legal
+                                Tenant Full Name</label>
+                            <input type="text" id="inputTenantName" placeholder="e.g., Olakunle Fayemiwo"
+                                class="w-full border border-slate-800 bg-slate-950 text-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-hidden focus:border-indigo-500 transition shadow-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1">Phone
+                                Number (WhatsApp)</label>
+                            <input type="tel" id="inputTenantPhone" placeholder="e.g., 08031234567"
+                                class="w-full border border-slate-800 bg-slate-950 text-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-hidden focus:border-indigo-500 transition shadow-sm">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1">Annual
+                            Upfront Contract Valuation (₦ Rent)</label>
+                        <input type="number" id="inputAnnualRent" placeholder="e.g., 3500000"
+                            class="w-full border border-slate-800 bg-slate-950 text-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-hidden focus:border-indigo-500 transition shadow-sm">
+                    </div>
+                </div>
+
+                <!-- STEP 3 VIEW PANEL: Historical Date Execution Anchors -->
+                <div id="wizardStep3" class="space-y-4 hidden">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1">Lease
+                            Commencement Handover Date</label>
+                        <input type="date" id="inputLeaseStart"
+                            class="w-full border border-slate-800 bg-slate-950 text-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-hidden focus:border-indigo-500 transition shadow-sm">
+                    </div>
+                    <div
+                        class="bg-indigo-950 border border-indigo-900 rounded-xl p-4 text-xs text-indigo-200 leading-relaxed">
+                        <strong class="font-bold block mb-0.5 text-indigo-100">🇳🇬 Regional Operational Rule Engine
+                            Enabled:</strong>
+                        The application will automatically compute and bind the matching termination envelope exactly
+                        365 days from your selection above to uphold strict year-to-year lump-sum compliance
+                        rules.
+                    </div>
+                </div>
+            </form>
+
+            <!-- Controller Footer Navigation Tray -->
+            <div class="p-4 bg-slate-950 border-t border-slate-800 flex justify-between items-center">
+                <button type="button" id="wizardBackBtn"
+                    class="invisible px-4 py-2 text-sm font-bold text-slate-400 hover:text-slate-200 transition cursor-pointer">←
+                    Back</button>
+                <button type="button" id="wizardNextBtn"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl text-sm font-bold shadow-sm transition cursor-pointer">Next
+                    →</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Asset Management & Edit Modal Backdrop -->
+    <!-- Enhanced Asset Management & Financial Sub-Ledger Modal -->
+    <div id="manageAssetModal"
+        class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 z-50 transition-all">
+        <div
+            class="bg-slate-900 w-full max-w-xl rounded-2xl shadow-xl border border-slate-800 overflow-hidden max-h-[95vh] flex flex-col text-slate-100">
+
+            <!-- Modal Header -->
+            <div class="p-5 border-b border-slate-800 bg-slate-950 flex justify-between items-center">
+                <div>
+                    <h3 class="text-lg font-bold text-white">Tenant & Rent Manager</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Update tenant details or record rent payments here.</p>
+                </div>
+                <button id="closeManageBtn"
+                    class="text-slate-400 hover:text-slate-200 font-bold text-xl p-1 cursor-pointer">&times;</button>
+            </div>
+
+            <!-- Scrollable Control Panel Body -->
+            <div class="overflow-y-auto flex-1 p-6 space-y-6 bg-slate-900">
+
+                <!-- SECTION A: Core Profile Registry (Editable Fields) -->
+                <form id="manageForm" class="space-y-4">
+                    <input type="hidden" id="editAssetId">
+                    <h4
+                        class="text-xs font-bold uppercase tracking-wider text-indigo-400 border-b border-slate-800 pb-1">
+                        1. Profile & Property Details</h4>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1">Tenant
+                                Name</label>
+                            <input type="text" id="editTenantName"
+                                class="w-full border border-slate-800 bg-slate-950 text-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-hidden focus:border-indigo-500 transition"
+                                required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1">Phone
+                                Number (WhatsApp)</label>
+                            <input type="tel" id="editTenantPhone"
+                                class="w-full border border-slate-800 bg-slate-950 text-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-hidden focus:border-indigo-500 transition">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1">Property
+                                Name</label>
+                            <input type="text" id="editPropertyName"
+                                class="w-full border border-slate-800 bg-slate-950 text-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-hidden focus:border-indigo-500 transition"
+                                required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1">Unit
+                                Number / Suite</label>
+                            <input type="text" id="editUnitNumber"
+                                class="w-full border border-slate-800 bg-slate-950 text-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-hidden focus:border-indigo-500 transition"
+                                required>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1">Annual
+                            Contract Value (₦)</label>
+                        <input type="number" id="editAnnualRent"
+                            class="w-full border border-slate-800 bg-slate-950 text-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-hidden focus:border-indigo-500 transition"
+                            required>
+                    </div>
+                </form>
+
+                <!-- SECTION B: Financial Sub-Ledger (Invoicing Real-Time State) -->
+                <div class="bg-slate-950 rounded-2xl p-4 border border-slate-800 space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-emerald-400">2. Rent Payment History
+                        </h4>
+                        <span id="invoiceStatusBadge"
+                            class="text-[10px] uppercase font-extrabold px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300">Loading
+                            State...</span>
+                    </div>
+
+                    <!-- Ledger Mini Metrics Matrix -->
+                    <div class="grid grid-cols-3 gap-2 text-center">
+                        <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 shadow-sm">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">Total Owed</p>
+                            <p id="ledgerTotalOwed" class="text-sm font-extrabold text-white">₦0</p>
+                        </div>
+                        <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 shadow-sm">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">Total Paid</p>
+                            <p id="ledgerTotalPaid" class="text-sm font-extrabold text-emerald-400">₦0</p>
+                        </div>
+                        <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 shadow-sm">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">Balance Due</p>
+                            <p id="ledgerBalanceDue" class="text-sm font-extrabold text-rose-400">₦0</p>
+                        </div>
+                    </div>
+
+                    <!-- Live Payment Collection Input -->
+                    <div class="pt-2">
+                        <label class="block text-xs font-bold uppercase tracking-wide text-slate-300 mb-1">Record New
+                            Payment (₦)</label>
+                        <div class="relative flex items-center">
+                            <span class="absolute left-4 text-sm font-bold text-slate-500">₦</span>
+                            <input type="number" id="logPaymentAmount" placeholder="Enter amount collected from tenant"
+                                class="w-full border border-slate-800 bg-slate-900 text-slate-100 rounded-xl pl-8 pr-4 py-3 text-sm focus:outline-hidden focus:border-emerald-500 transition shadow-sm font-semibold text-emerald-400">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contextual Control Footer -->
+            <div class="p-4 bg-slate-950 border-t border-slate-800 flex justify-between items-center">
+                <button type="button" id="deleteAssetBtn"
+                    class="bg-rose-950/40 hover:bg-rose-950/60 text-rose-400 px-4 py-2 rounded-xl text-sm font-bold transition cursor-pointer">
+                    Delete Profile
+                </button>
+                <button type="button" id="saveAssetChangesBtn"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl text-sm font-bold shadow-sm transition cursor-pointer">
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- Orchestrator Mount Hook -->
+    <script type="module" src="js/main.js"></script>
+</body>
+
+</html>

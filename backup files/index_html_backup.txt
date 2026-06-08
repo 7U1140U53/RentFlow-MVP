@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RentFlow — Tenant & Rent Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        slate: { 950: '#070a13', 900: '#0f1423', 800: '#1d243d', 700: '#333f63' }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="h-full text-slate-100 antialiased font-sans selection:bg-emerald-500 selection:text-white">
+
+    <div id="appLoadingScreen"
+        class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-950 transition-opacity duration-300">
+        <div class="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-400 rounded-full animate-spin mb-4"></div>
+        <p class="text-xs tracking-widest text-slate-400 uppercase">Securing Ledger Network...</p>
+    </div>
+
+    <div id="authScreen"
+        class="hidden min-h-screen flex items-center justify-center p-4 bg-slate-950 relative overflow-hidden">
+        <div class="absolute w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl -top-20 -left-20"></div>
+        <div class="absolute w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl -bottom-20 -right-20"></div>
+
+        <div class="w-full max-w-md bg-slate-900 border border-slate-800 p-8 rounded-2xl shadow-xl backdrop-blur-md">
+            <div class="text-center mb-8">
+                <h1 class="text-2xl font-bold tracking-tight text-white">RentFlow</h1>
+                <p id="authSubtitle" class="text-xs text-slate-400 mt-1">Rent & Lease Tracking Dashboard</p>
+            </div>
+
+            <form id="authForm" class="space-y-5">
+                <div>
+                    <label class="block text-xs font-semibold tracking-wider text-slate-400 uppercase mb-2">Email
+                        Address</label>
+                    <input type="email" id="authEmail" required
+                        class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors">
+                </div>
+                <div>
+                    <label
+                        class="block text-xs font-semibold tracking-wider text-slate-400 uppercase mb-2">Password</label>
+                    <input type="password" id="authPassword" required
+                        class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors">
+                </div>
+                <button type="submit" id="authSubmitBtn"
+                    class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer shadow-sm">
+                    Access Dashboard
+                </button>
+            </form>
+
+            <div class="mt-6 text-center">
+                <button id="toggleAuthMode"
+                    class="text-xs text-slate-400 hover:text-emerald-400 transition-colors underline cursor-pointer">
+                    Don't have an account? Sign up here
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="appShell" class="hidden h-full flex overflow-hidden">
+        <aside class="w-64 bg-slate-900 border-r border-slate-800 flex flex-col justify-between flex-shrink-0">
+            <div>
+                <div class="p-6 border-b border-slate-800/60">
+                    <h2 class="text-lg font-bold tracking-tight text-white">RentFlow</h2>
+                    <p class="text-[10px] text-slate-500 tracking-widest uppercase mt-0.5">Asset Controller</p>
+                </div>
+                <nav class="p-4 space-y-1.5">
+                    <button data-target="dashboardView"
+                        class="nav-link w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold tracking-wide uppercase transition-all bg-emerald-600/10 text-emerald-400 border border-emerald-500/20 text-left cursor-pointer">
+                        📊 Dashboard
+                    </button>
+                    <button data-target="paymentsView"
+                        class="nav-link w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold tracking-wide uppercase transition-all text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 text-left cursor-pointer">
+                        🏦 Rent Payment History
+                    </button>
+                    <button data-target="leasesView"
+                        class="nav-link w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold tracking-wide uppercase transition-all text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 text-left cursor-pointer">
+                        📄 Lease Documents
+                    </button>
+                    <button data-target="settingsView"
+                        class="nav-link w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold tracking-wide uppercase transition-all text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 text-left cursor-pointer">
+                        ⚙️ Settings
+                    </button>
+                </nav>
+            </div>
+
+            <div class="p-4 border-t border-slate-800/60 bg-slate-950/40 flex items-center justify-between">
+                <div class="overflow-hidden pr-2">
+                    <p class="text-[10px] uppercase font-semibold text-slate-500 tracking-wider">Active Landlord</p>
+                    <p id="userProfileEmail" class="text-xs text-slate-300 truncate font-medium">user@domain.com</p>
+                </div>
+                <button id="signOutBtn"
+                    class="p-2 bg-slate-800 hover:bg-rose-950/40 text-slate-400 hover:text-rose-400 border border-slate-700/60 hover:border-rose-900/50 rounded-xl transition-all cursor-pointer"
+                    title="Sign Out">
+                    🚪
+                </button>
+            </div>
+        </aside>
+
+        <main id="mainContent" class="flex-1 min-w-0 overflow-y-auto bg-slate-950 p-8 relative">
+
+            <section id="dashboardView" class="view-pane space-y-8">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-2xl font-bold tracking-tight text-white">Active Tenant Records</h1>
+                        <p class="text-xs text-slate-400 mt-0.5">Rent & Lease Tracking Dashboard</p>
+                    </div>
+                    <button id="openWizardBtn"
+                        class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-5 rounded-xl text-xs uppercase tracking-wider transition-all shadow-sm cursor-pointer">
+                        + Add New Tenant
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-sm">
+                        <p class="text-[10px] font-bold tracking-widest text-slate-500 uppercase">Total Expected Inflow
+                        </p>
+                        <h3 id="metricTotalRent" class="text-2xl font-bold text-white mt-1">₦0</h3>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-sm">
+                        <p class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">🟡 Pending Arrears</p>
+                        <h3 id="metricTotalBalance" class="text-2xl font-bold text-amber-400 mt-1">₦0</h3>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-sm">
+                        <p class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">🔴 Overdue Actions</p>
+                        <h3 id="metricOverdueCount" class="text-2xl font-bold text-rose-400 mt-1">0</h3>
+                    </div>
+                </div>
+
+                <div id="tenantGridContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                </div>
+            </section>
+
+            <section id="paymentsView" class="view-pane hidden space-y-6">
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight text-white">Rent Payment History</h1>
+                    <p class="text-xs text-slate-400 mt-0.5">Full historical audit tracking log across all active
+                        database files.</p>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead
+                                class="bg-slate-950 text-slate-400 uppercase font-bold tracking-wider border-b border-slate-800/60">
+                                <tr>
+                                    <th class="p-4">Tenant / Property</th>
+                                    <th class="p-4">Total Value</th>
+                                    <th class="p-4">Amount Paid</th>
+                                    <th class="p-4">Remaining Balance</th>
+                                    <th class="p-4">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="paymentsTableBody" class="divide-y divide-slate-800/40 text-slate-300">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="leasesView" class="view-pane hidden space-y-6">
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight text-white">Lease Contract Documents</h1>
+                    <p class="text-xs text-slate-400 mt-0.5">Time tracking overview metrics across rental contract end
+                        dates.</p>
+                </div>
+                <div id="leasesListContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                </div>
+            </section>
+
+            <section id="settingsView" class="view-pane hidden space-y-6">
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight text-white">Landlord System Configuration</h1>
+                    <p class="text-xs text-slate-400 mt-0.5">Manage secure workspace variables and API session
+                        variables.</p>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-xl space-y-4 shadow-sm">
+                    <h3 class="text-sm font-bold text-white uppercase tracking-wider">Workspace Parameters</h3>
+                    <hr class="border-slate-800">
+                    <p class="text-xs text-slate-400">All local pipeline routines are fully backed up and isolated via
+                        Supabase Row-Level Security parameters linked to your tenant registration key sequence.</p>
+                    <div class="pt-2">
+                        <button id="settingsSignOutBtn"
+                            class="bg-rose-950/40 hover:bg-rose-900/40 text-rose-400 border border-rose-900/50 font-bold py-2.5 px-4 rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer">
+                            Terminate Operational Session
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="onboardingWizardModal"
+        class="fixed inset-0 z-40 hidden flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+        <div class="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+            <div class="flex items-center justify-between border-b border-slate-800/80 pb-4">
+                <h2 class="text-base font-bold text-white uppercase tracking-wider">Onboard New Tenant</h2>
+                <button type="button"
+                    class="closeModalBtn text-slate-500 hover:text-slate-300 text-xl cursor-pointer">&times;</button>
+            </div>
+
+            <form id="wizardForm" class="space-y-4">
+                <div id="wizardStep1" class="space-y-4">
+                    <p class="text-[10px] font-bold tracking-widest text-emerald-400 uppercase">Step 1: Contact
+                        Profiling</p>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Full Tenant
+                            Name</label>
+                        <input type="text" id="wTenantName" required
+                            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Phone Number
+                            (WhatsApp)</label>
+                        <input type="text" id="wTenantPhone" placeholder="e.g. 08031234567" required
+                            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+
+                <div id="wizardStep2" class="space-y-4">
+                    <p class="text-[10px] font-bold tracking-widest text-emerald-400 uppercase">Step 2: Valuation Terms
+                    </p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Property
+                                Structure</label>
+                            <input type="text" id="wPropertyName" placeholder="e.g. Alpha Towers" required
+                                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Unit / Suite
+                                Identification</label>
+                            <input type="text" id="wUnitNumber" placeholder="e.g. Suite 402" required
+                                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Total Annual Rent
+                                (₦)</label>
+                            <input type="number" id="wAnnualRent" required
+                                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Lease Expiry
+                                Date</label>
+                            <input type="date" id="wExpiryDate" required
+                                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-800/80 flex justify-end gap-3">
+                    <button type="button"
+                        class="closeModalBtn bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2 px-4 rounded-xl text-xs uppercase tracking-wider cursor-pointer">Cancel</button>
+                    <button type="submit"
+                        class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-5 rounded-xl text-xs uppercase tracking-wider shadow-sm cursor-pointer">Onboard
+                        Record</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="manageAssetModal"
+        class="fixed inset-0 z-40 hidden flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+        <div class="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+            <div class="flex items-center justify-between border-b border-slate-800/80 pb-4">
+                <div>
+                    <h2 class="text-base font-bold text-white uppercase tracking-wider">Tenant & Rent Manager</h2>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Update tenant details or record rent payments here.</p>
+                </div>
+                <button type="button"
+                    class="closeModalBtn text-slate-500 hover:text-slate-300 text-xl cursor-pointer">&times;</button>
+            </div>
+
+            <form id="manageAssetForm" class="space-y-6">
+                <input type="hidden" id="editAssetId">
+
+                <div class="space-y-4">
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">1. Profile & Property Details
+                    </h4>
+                    <div class="grid grid-cols-2 gap-4 bg-slate-950 p-4 rounded-xl border border-slate-800/60">
+                        <div>
+                            <label class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Tenant
+                                Link</label>
+                            <input type="text" id="editTenantName"
+                                class="bg-transparent border-b border-slate-800 w-full text-xs text-white pt-1 focus:outline-none focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">WhatsApp
+                                Phone</label>
+                            <input type="text" id="editTenantPhone"
+                                class="bg-transparent border-b border-slate-800 w-full text-xs text-white pt-1 focus:outline-none focus:border-emerald-500">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">2. Rent Payment History</h4>
+                    <div class="grid grid-cols-3 gap-4 text-center">
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800/60">
+                            <span class="text-[9px] font-bold tracking-wider text-slate-500 uppercase">Total Rent</span>
+                            <p id="modalTotalRent" class="text-sm font-bold text-white mt-0.5">₦0</p>
+                        </div>
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800/60">
+                            <span class="text-[9px] font-bold tracking-wider text-slate-500 uppercase">Paid Till
+                                Date</span>
+                            <p id="modalAmountPaid" class="text-sm font-bold text-emerald-400 mt-0.5">₦0</p>
+                        </div>
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800/60">
+                            <span class="text-[9px] font-bold tracking-wider text-slate-500 uppercase">Remaining
+                                Balance</span>
+                            <p id="modalBalanceDue" class="text-sm font-bold text-rose-400 mt-0.5">₦0</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-2">Record New Payment
+                            (₦)</label>
+                        <input type="number" id="logPaymentAmount" placeholder="Enter collection amount"
+                            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+
+                    <button type="button" id="whatsappReminderBtn"
+                        class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs uppercase tracking-wider shadow-sm transition flex items-center justify-center gap-2 cursor-pointer">
+                        💬 Generate WhatsApp Reminder
+                    </button>
+                </div>
+
+                <div class="pt-4 border-t border-slate-800/80 flex justify-end gap-3">
+                    <button type="button"
+                        class="closeModalBtn bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2 px-4 rounded-xl text-xs uppercase tracking-wider cursor-pointer">Close</button>
+                    <button type="submit"
+                        class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-5 rounded-xl text-xs uppercase tracking-wider shadow-sm cursor-pointer">Save
+                        Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script src="js/ui.js"></script>
+    <script src="js/main.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,91 @@
+/* RentFlow MVP Styles */
+/* ==========================================================================
+   RentFlow Core Experience Stylesheet
+   Supplements Tailwind v4 with Premium Micro-Interactions & Transitions
+   ========================================================================== */
+
+/* 1. Global Viewport Enhancements */
+html {
+    scroll-behavior: smooth;
+    /* Forces smooth scrolling behavior across the entire DOM tree */
+}
+
+body {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* 2. High-Fidelity Custom Scrollbars for Data Panes and Modals */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    /* slate-300 */
+    border-radius: 100px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+    /* slate-400 */
+}
+
+/* 3. Modal Backdrop Animation Hooks */
+#onboardingWizard {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Triggered when hidden class is toggled off */
+#onboardingWizard:not(.hidden) {
+    display: flex;
+    animation: fadeInBackdrop 0.2s ease-out forwards;
+}
+
+#onboardingWizard:not(.hidden)>div {
+    animation: slideUpModal 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* 4. Hardware-Accelerated Animation Keyframes */
+@keyframes fadeInBackdrop {
+    from {
+        background-color: rgba(15, 23, 42, 0);
+        backdrop-filter: blur(0px);
+    }
+
+    to {
+        background-color: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(4px);
+    }
+}
+
+@keyframes slideUpModal {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(16px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* 5. Custom Utility: Interactive Form States */
+input:focus {
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.15);
+    /* Indigo glow */
+}
+
+/* 6. High-Contrast Focus & Selection Enhancements */
+::selection {
+    background-color: rgba(99, 102, 241, 0.2);
+    /* Beautiful Indigo selection tint */
+    color: #4f46e5;
+}
