@@ -4,7 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RentFlow — Tenant & Rent Manager</title>
+    <title>RentFlow</title>
+
+    <!-- Instant Inline SVG Emoji Favicon Frame -->
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏢</text></svg>">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -21,12 +26,26 @@
 
 <body class="h-full text-slate-100 antialiased font-sans selection:bg-emerald-500 selection:text-white">
 
+    <!-- Orthogonal Blueprint Grid Background Vector Decoration Layer -->
+    <div class="fixed inset-0 pointer-events-none z-0">
+        <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <pattern id="orthogonalGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.025)" stroke-width="1" />
+                </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#orthogonalGrid)" />
+        </svg>
+    </div>
+
+    <!-- Application Initialization Loading Veil Barrier -->
     <div id="appLoadingScreen"
         class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-950 transition-opacity duration-300">
         <div class="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-400 rounded-full animate-spin mb-4"></div>
-        <p class="text-xs tracking-widest text-slate-400 uppercase">Securing Ledger Network...</p>
+        <p class="text-xs tracking-wider text-slate-400">Getting things ready...</p>
     </div>
 
+    <!-- Secure Gateway Gatekeeper Module Presentation Canvas -->
     <div id="authScreen"
         class="hidden min-h-screen flex items-center justify-center p-4 bg-slate-950 relative overflow-hidden">
         <div class="absolute w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl -top-20 -left-20"></div>
@@ -35,13 +54,13 @@
         <div class="w-full max-w-md bg-slate-900 border border-slate-800 p-8 rounded-2xl shadow-xl backdrop-blur-md">
             <div class="text-center mb-8">
                 <h1 class="text-2xl font-bold tracking-tight text-white">RentFlow</h1>
-                <p id="authSubtitle" class="text-xs text-slate-400 mt-1">Rent & Lease Tracking Dashboard</p>
+                <p id="authSubtitle" class="text-xs text-slate-400 mt-1">Welcome back. Please sign in.</p>
             </div>
 
             <form id="authForm" class="space-y-5">
                 <div>
-                    <label class="block text-xs font-semibold tracking-wider text-slate-400 uppercase mb-2">Email
-                        Address</label>
+                    <label
+                        class="block text-xs font-semibold tracking-wider text-slate-400 uppercase mb-2">Email</label>
                     <input type="email" id="authEmail" required
                         class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors">
                 </div>
@@ -59,38 +78,52 @@
                 </div>
                 <button type="submit" id="authSubmitBtn"
                     class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer shadow-sm">
-                    Access Dashboard
+                    Go to dashboard
                 </button>
             </form>
 
             <div class="mt-6 text-center">
                 <button id="toggleAuthMode"
                     class="text-xs text-slate-400 hover:text-emerald-400 transition-colors underline cursor-pointer">
-                    Don't have an account? Sign up here
+                    Create an account
                 </button>
             </div>
         </div>
     </div>
 
-    <div id="appShell" class="hidden h-full flex overflow-hidden">
-        <aside class="w-64 bg-slate-900 border-r border-slate-800 flex flex-col justify-between flex-shrink-0">
+    <!-- Main Workspace Application System Core Shell Wrapper Layout -->
+    <div id="appShell" class="hidden h-full flex overflow-hidden relative">
+
+        <!-- Fluid Translucent Side-Drawer Backdrop Shroud -->
+        <div id="sidebarOverlay"
+            class="fixed inset-0 bg-black/60 z-30 transition-opacity duration-300 opacity-0 pointer-events-none backdrop-blur-xs">
+        </div>
+
+        <!-- Sliding Navigation Control Panel Sidebar Node Component Drawer -->
+        <aside id="appSidebar"
+            class="fixed top-0 left-0 h-full w-72 bg-slate-900/95 border-r border-slate-800/80 flex flex-col justify-between z-40 transition-transform duration-300 ease-out -translate-x-full shadow-2xl backdrop-blur-md">
             <div>
-                <div class="p-6 border-b border-slate-800/60">
-                    <h2 class="text-lg font-bold tracking-tight text-white">RentFlow</h2>
-                    <p class="text-[10px] text-slate-500 tracking-widest uppercase mt-0.5">Asset Controller</p>
+                <div class="p-6 border-b border-slate-800/60 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-lg font-bold tracking-tight text-white">RentFlow</h2>
+                    </div>
+                    <button id="closeSidebarBtn"
+                        class="text-slate-400 hover:text-slate-200 text-xl cursor-pointer transition-transform duration-200 hover:rotate-90 p-1.5 rounded-lg hover:bg-slate-800/50 leading-none">
+                        &times;
+                    </button>
                 </div>
                 <nav class="p-4 space-y-1.5">
                     <button data-target="dashboardView"
                         class="nav-link w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold tracking-wide uppercase transition-all bg-emerald-600/10 text-emerald-400 border border-emerald-500/20 text-left cursor-pointer">
-                        📊 Dashboard
+                        📊 Overview
                     </button>
                     <button data-target="paymentsView"
                         class="nav-link w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold tracking-wide uppercase transition-all text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 text-left cursor-pointer">
-                        🏦 Rent Payment History
+                        🏦 Payments
                     </button>
                     <button data-target="leasesView"
                         class="nav-link w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold tracking-wide uppercase transition-all text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 text-left cursor-pointer">
-                        📄 Lease Documents
+                        📄 Leases
                     </button>
                     <button data-target="settingsView"
                         class="nav-link w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold tracking-wide uppercase transition-all text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 text-left cursor-pointer">
@@ -101,8 +134,7 @@
 
             <div class="p-4 border-t border-slate-800/60 bg-slate-950/40 flex items-center justify-between">
                 <div class="overflow-hidden pr-2">
-                    <p class="text-[10px] uppercase font-semibold text-slate-500 tracking-wider">Active Landlord</p>
-                    <p id="userProfileEmail" class="text-xs text-slate-300 truncate font-medium">user@domain.com</p>
+                    <p id="userProfileEmail" class="text-xs text-slate-400 truncate font-medium">user@domain.com</p>
                 </div>
                 <button id="signOutBtn"
                     class="p-2 bg-slate-800 hover:bg-rose-950/40 text-slate-400 hover:text-rose-400 border border-slate-700/60 hover:border-rose-900/50 rounded-xl transition-all cursor-pointer"
@@ -112,47 +144,51 @@
             </div>
         </aside>
 
-        <main id="mainContent" class="flex-1 min-w-0 overflow-y-auto bg-slate-950 p-8 relative">
+        <!-- View Display Interface Window Panel Frame Grid Layout Module Section Context -->
+        <main id="mainContent" class="flex-1 min-w-0 overflow-y-auto bg-slate-950/40 p-8 relative z-10">
 
+            <!-- Global Responsive Top-bar Layout Controller -->
+            <div class="flex items-center justify-between mb-8 pb-4 border-b border-slate-900/60 relative z-20">
+                <button id="openSidebarBtn"
+                    class="p-2.5 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-200 rounded-xl transition-all duration-200 shadow-md cursor-pointer flex items-center justify-center group">
+                    <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none"
+                        stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+                <div class="overflow-hidden text-right">
+                    <p class="text-[10px] font-bold text-emerald-400 tracking-wider">● Live</p>
+                </div>
+            </div>
+
+            <!-- View Module 1: Core Analytical Telemetry Dashboard Interface Screen Pane -->
             <section id="dashboardView" class="view-pane space-y-8">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h1 class="text-2xl font-bold tracking-tight text-white">Active Tenant Records</h1>
-                        <p class="text-xs text-slate-400 mt-0.5">Rent & Lease Tracking Dashboard</p>
+                        <h1 class="text-2xl font-bold tracking-tight text-white">Overview</h1>
+                        <p class="text-xs text-slate-400 mt-0.5">Track your properties and tenants</p>
                     </div>
                     <button id="openWizardBtn"
                         class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-5 rounded-xl text-xs uppercase tracking-wider transition-all shadow-sm cursor-pointer">
-                        + Add New Tenant
+                        + New tenant
                     </button>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-sm">
-                        <p class="text-[10px] font-bold tracking-widest text-slate-500 uppercase">Total Expected Inflow
-                        </p>
-                        <h3 id="metricTotalRent" class="text-2xl font-bold text-white mt-1">₦0</h3>
-                    </div>
-                    <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-sm">
-                        <p class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">🟡 Pending Arrears</p>
-                        <h3 id="metricTotalBalance" class="text-2xl font-bold text-amber-400 mt-1">₦0</h3>
-                    </div>
-                    <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-sm">
-                        <p class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">🔴 Overdue Actions</p>
-                        <h3 id="metricOverdueCount" class="text-2xl font-bold text-rose-400 mt-1">0</h3>
-                    </div>
-                </div>
+                <!-- TREMOR CONTAINER -->
+                <div id="tremorMetricsContainer" class="grid grid-cols-1 lg:grid-cols-3 gap-6"></div>
 
-                <div id="tenantGridContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                </div>
+                <!-- Tenant Grid Layout Container -->
+                <div id="tenantGridContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-6"></div>
             </section>
 
+            <!-- View Module 2: Payments History Pane -->
             <section id="paymentsView" class="view-pane hidden space-y-6">
                 <div>
-                    <h1 class="text-2xl font-bold tracking-tight text-white">Rent Payment History</h1>
-                    <p class="text-xs text-slate-400 mt-0.5">Full historical audit tracking log across all active
-                        database files.</p>
+                    <h1 class="text-2xl font-bold tracking-tight text-white">Payments</h1>
+                    <p class="text-xs text-slate-400 mt-0.5">Payment logs across your portfolio.</p>
                 </div>
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+                <div
+                    class="bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-sm backdrop-blur-xs">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs">
                             <thead
@@ -172,31 +208,30 @@
                 </div>
             </section>
 
+            <!-- View Module 3: Lease Lifecycle Tracking Pane -->
             <section id="leasesView" class="view-pane hidden space-y-6">
                 <div>
-                    <h1 class="text-2xl font-bold tracking-tight text-white">Lease Contract Documents</h1>
-                    <p class="text-xs text-slate-400 mt-0.5">Time tracking overview metrics across rental contract end
-                        dates.</p>
+                    <h1 class="text-2xl font-bold tracking-tight text-white">Leases</h1>
+                    <p class="text-xs text-slate-400 mt-0.5">Lease tracking and renewal deadlines.</p>
                 </div>
                 <div id="leasesListContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 </div>
             </section>
 
+            <!-- View Module 4: Settings Pane -->
             <section id="settingsView" class="view-pane hidden space-y-6">
                 <div>
-                    <h1 class="text-2xl font-bold tracking-tight text-white">Landlord System Configuration</h1>
-                    <p class="text-xs text-slate-400 mt-0.5">Manage secure workspace variables and API session
-                        variables.</p>
+                    <h1 class="text-2xl font-bold tracking-tight text-white">Settings</h1>
+                    <p class="text-xs text-slate-400 mt-0.5">Manage your account preferences.</p>
                 </div>
-                <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-xl space-y-4 shadow-sm">
-                    <h3 class="text-sm font-bold text-white uppercase tracking-wider">Workspace Parameters</h3>
-                    <hr class="border-slate-800">
-                    <p class="text-xs text-slate-400">All local pipeline routines are fully backed up and isolated via
-                        Supabase Row-Level Security parameters linked to your tenant registration key sequence.</p>
+                <div
+                    class="bg-slate-900/80 border border-slate-800 p-6 rounded-2xl max-w-xl space-y-4 shadow-sm backdrop-blur-xs">
+                    <p class="text-xs text-slate-400">All local data is isolated using secure database row-level
+                        parameters linked directly to your landlord profile token.</p>
                     <div class="pt-2">
                         <button id="settingsSignOutBtn"
                             class="bg-rose-950/40 hover:bg-rose-900/40 text-rose-400 border border-rose-900/50 font-bold py-2.5 px-4 rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer">
-                            Terminate Operational Session
+                            Sign out of RentFlow
                         </button>
                     </div>
                 </div>
@@ -204,22 +239,19 @@
         </main>
     </div>
 
+    <!-- Layout Form Sheet Modal Frame: Onboarding Wizard -->
     <div id="onboardingWizardModal"
         class="fixed inset-0 z-40 hidden flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
         <div class="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
             <div class="flex items-center justify-between border-b border-slate-800/80 pb-4">
-                <h2 class="text-base font-bold text-white uppercase tracking-wider">Onboard New Tenant</h2>
+                <h2 class="text-sm font-bold text-white uppercase tracking-wider">Add new tenant</h2>
                 <button type="button"
                     class="closeModalBtn text-slate-500 hover:text-slate-300 text-xl cursor-pointer">&times;</button>
             </div>
-
             <form id="wizardForm" class="space-y-4">
-                <div id="wizardStep1" class="space-y-4">
-                    <p class="text-[10px] font-bold tracking-widest text-emerald-400 uppercase">Step 1: Contact
-                        Profiling</p>
+                <div class="space-y-4">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Full Tenant
-                            Name</label>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Tenant Name</label>
                         <input type="text" id="wTenantName" required
                             class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
                     </div>
@@ -229,28 +261,23 @@
                         <input type="text" id="wTenantPhone" placeholder="e.g. 08031234567" required
                             class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
                     </div>
-                </div>
-
-                <div id="wizardStep2" class="space-y-4">
-                    <p class="text-[10px] font-bold tracking-widest text-emerald-400 uppercase">Step 2: Valuation Terms
-                    </p>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Property
-                                Structure</label>
+                                name</label>
                             <input type="text" id="wPropertyName" placeholder="e.g. Alpha Towers" required
                                 class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Unit / Suite
-                                Identification</label>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Unit or Apt
+                                number</label>
                             <input type="text" id="wUnitNumber" placeholder="e.g. Suite 402" required
                                 class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Total Annual Rent
+                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Yearly rent
                                 (₦)</label>
                             <input type="number" id="wAnnualRent" required
                                 class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
@@ -263,40 +290,36 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="pt-4 border-t border-slate-800/80 flex justify-end gap-3">
                     <button type="button"
                         class="closeModalBtn bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2 px-4 rounded-xl text-xs uppercase tracking-wider cursor-pointer">Cancel</button>
                     <button type="submit"
-                        class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-5 rounded-xl text-xs uppercase tracking-wider shadow-sm cursor-pointer">Onboard
-                        Record</button>
+                        class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-5 rounded-xl text-xs uppercase tracking-wider shadow-sm cursor-pointer">Add
+                        tenant</button>
                 </div>
             </form>
         </div>
     </div>
 
+    <!-- Layout Form Sheet Modal Frame: Manage Asset -->
     <div id="manageAssetModal"
         class="fixed inset-0 z-40 hidden flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
         <div class="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
             <div class="flex items-center justify-between border-b border-slate-800/80 pb-4">
                 <div>
-                    <h2 class="text-base font-bold text-white uppercase tracking-wider">Tenant & Rent Manager</h2>
-                    <p class="text-[11px] text-slate-400 mt-0.5">Update tenant details or record rent payments here.</p>
+                    <h2 class="text-sm font-bold text-white uppercase tracking-wider">Manage tenant</h2>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Update details or record payments.</p>
                 </div>
                 <button type="button"
                     class="closeModalBtn text-slate-500 hover:text-slate-300 text-xl cursor-pointer">&times;</button>
             </div>
-
             <form id="manageAssetForm" class="space-y-6">
                 <input type="hidden" id="editAssetId">
-
                 <div class="space-y-4">
-                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">1. Profile & Property Details
-                    </h4>
                     <div class="grid grid-cols-2 gap-4 bg-slate-950 p-4 rounded-xl border border-slate-800/60">
                         <div>
                             <label class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Tenant
-                                Link</label>
+                                Name</label>
                             <input type="text" id="editTenantName"
                                 class="bg-transparent border-b border-slate-800 w-full text-xs text-white pt-1 focus:outline-none focus:border-emerald-500">
                         </div>
@@ -308,58 +331,53 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="space-y-4">
-                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">2. Rent Payment History</h4>
                     <div class="grid grid-cols-3 gap-4 text-center">
                         <div class="bg-slate-950 p-3 rounded-xl border border-slate-800/60">
-                            <span class="text-[9px] font-bold tracking-wider text-slate-500 uppercase">Total Rent</span>
-                            <p id="modalTotalRent" class="text-sm font-bold text-white mt-0.5">₦0</p>
+                            <span class="text-[9px] font-bold tracking-wider text-slate-500 uppercase">Yearly
+                                Rent</span>
+                            <p id="modalTotalRent" class="text-sm font-bold text-white mt-0.5 font-mono">₦0</p>
                         </div>
                         <div class="bg-slate-950 p-3 rounded-xl border border-slate-800/60">
-                            <span class="text-[9px] font-bold tracking-wider text-slate-500 uppercase">Paid Till
-                                Date</span>
-                            <p id="modalAmountPaid" class="text-sm font-bold text-emerald-400 mt-0.5">₦0</p>
+                            <span class="text-[9px] font-bold tracking-wider text-slate-500 uppercase">Paid So
+                                Far</span>
+                            <p id="modalAmountPaid" class="text-sm font-bold text-emerald-400 mt-0.5 font-mono">₦0</p>
                         </div>
                         <div class="bg-slate-950 p-3 rounded-xl border border-slate-800/60">
-                            <span class="text-[9px] font-bold tracking-wider text-slate-500 uppercase">Remaining
+                            <span class="text-[9px] font-bold tracking-wider text-slate-500 uppercase">Overdue
                                 Balance</span>
-                            <p id="modalBalanceDue" class="text-sm font-bold text-rose-400 mt-0.5">₦0</p>
+                            <p id="modalBalanceDue" class="text-sm font-bold text-rose-400 mt-0.5 font-mono">₦0</p>
                         </div>
                     </div>
-
                     <div>
-                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-2">Record New Payment
+                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-2">Record Payment
                             (₦)</label>
-                        <input type="number" id="logPaymentAmount" placeholder="Enter collection amount"
+                        <input type="number" id="logPaymentAmount" placeholder="Enter amount collected"
                             class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500">
                     </div>
-
                     <button type="button" id="whatsappReminderBtn"
                         class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs uppercase tracking-wider shadow-sm transition flex items-center justify-center gap-2 cursor-pointer">
-                        💬 Generate WhatsApp Reminder
+                        💬 Send WhatsApp reminder
                     </button>
                 </div>
-
                 <div class="pt-4 border-t border-slate-800/80 flex justify-end gap-3">
                     <button type="button"
-                        class="closeModalBtn bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2 px-4 rounded-xl text-xs uppercase tracking-wider cursor-pointer">
-                        Close
-                    </button>
+                        class="closeModalBtn bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2 px-4 rounded-xl text-xs uppercase tracking-wider cursor-pointer">Close</button>
                     <button type="submit"
-                        class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-5 rounded-xl text-xs uppercase tracking-wider shadow-sm cursor-pointer">
-                        Save Changes
-                    </button>
+                        class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-5 rounded-xl text-xs uppercase tracking-wider shadow-sm cursor-pointer">Save
+                        updates</button>
                 </div>
-
                 <button type="button" id="deleteTenantRecordBtn"
                     class="w-full bg-rose-950/20 hover:bg-rose-900 border border-rose-900/40 hover:border-rose-800 text-rose-400 hover:text-white font-bold py-2 px-4 rounded-xl text-xs uppercase tracking-wider transition mt-4 cursor-pointer">
-                    🗑️ Delete Tenant Profile Permanently
+                    🗑️ Delete tenant record
                 </button>
             </form>
-            <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-            <script type="module" src="js/ui.js"></script>
-            <script type="module" src="js/main.js"></script>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="js/ui.js"></script>
+    <script type="module" src="js/main.js"></script>
 </body>
 
 </html>
